@@ -1,5 +1,5 @@
 
-import { UiElement, playwright, invokeBrowser, gotoUrl, closeplaywright } from "../test-automation-wrappers/lib/playwright";
+import { UiElement, playwright, invokeBrowser, gotoUrl, closeplaywright, UiTable } from "../test-automation-wrappers/lib/playwright";
 import { createLogger } from "winston";
 import logger, { options } from "../test-automation-wrappers/lib/logger";
 import testContext from '../test-automation-wrappers/lib/testContext';
@@ -15,7 +15,7 @@ describe('A first sample Playwright test', () => {
     beforeEach(async function () {
         playwright.context = await playwright.browser.newContext();
         playwright.page = await playwright.context.newPage();
-        playwright.context.setDefaultTimeout(100000);
+        playwright.context.setDefaultTimeout(5000);
         testContext.assertsJson = JSON.parse("{}");
         testContext.assertsJson.soft = [];
         await fileUtils.ensureDir('test-results/log');
@@ -35,12 +35,57 @@ describe('A first sample Playwright test', () => {
 
 
     it('Search Playwright documentation from Goggle', async () => {
-        let searchBox = new UiElement('[name="q"]', { description: 'Searcg Box' });
-        await gotoUrl('https://google.com?hl=en');
-        await searchBox.setValue('Playwright doc');
-        await customAssert.softAssert('test', 'test1', 'Both should be equal');
-        await logger.info('end of scenario');
-        console.log(testContext.assertsJson)
+        let partyName = new UiElement('#link4', { description: 'party Name' });
+        await gotoUrl('https://csis.tshc.gov.in/');
+        await partyName.click();
+        await new UiElement('#both',{description: 'Radio both'}).click();
+        await new UiElement('#pet',{description: 'party name both'}).setValue('TSPSC');
+        await new UiElement('#pyear',{description: 'party year both'}).setValue('2024');
+       
+        console.log('yes');
+        
+        await new UiElement('#searchfour',{description: 'Search button'}).click();
+        // await new UiElement('#pcaptcha',{description: 'party captcha '}).setValue('2024');
+        await playwright.page.waitForTimeout(5000);
+        console.log('yes');
+        let tabl = new UiTable('#inftable');
+       let rows =  await tabl.getRowsLength();
+         
+        for(let row = 2; row<rows; row++){
+            let sts = await new UiTable('#inftable').getCellData(row,3);
+            let r=row;
+            if(sts === 'Pending'){
+                
+                let linkName = await new UiTable('#inftable').getCellData(r,0);
+               await (await new UiTable('#inftable').getRow(r)).clickLink(linkName,{force:true}) 
+                  await playwright.page.waitForTimeout(5000);
+                 const b =  await playwright.page.frameLocator(`//iframe`);
+
+   
+                let filingDate =await  b.locator('//*[@id="inftable"]/tbody/tr[7]/td[2]').innerText();
+               let listingDate =await  b.locator('//*[@id="inftable"]/tbody/tr[8]/td[2]').innerText();  
+               let purpose = await b.locator('//*[@id="inftable"]/tbody/tr[9]/td[2]').innerText();  
+               let cnrNumber = await b.locator('//*[@id="inftable"]/tbody/tr[3]/td[2]').innerText(); 
+               let registerDate = await b.locator('//*[@id="inftable"]/tbody/tr[7]/td[4]').innerText();  
+
+                let json = JSON.parse('[]');
+                let row = JSON.parse(`{ "FiledName": ${linkName},"" : ${sts}} , "":${filingDate}, "ListingDate":${listingDate}, "purpose": ${purpose},"CRN": ${cnrNumber},"RegistrationDate": ${registerDate} }`)
+                // json.FiledName = linkName;
+                // json.Status = sts;
+                // json.FileingDate = filingDate;
+                // json.ListingDate = listingDate;
+                // json.Purspose = purpose;
+                // json.CNRNumber = cnrNumber;
+                // json.RegisterDate = registerDate;
+                json.push(row);
+                console.log(JSON.stringify(json));
+                
+                console.log('yes');
+            }
+
+        } 
+       
+
         return true;
     })
 
